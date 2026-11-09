@@ -9,15 +9,21 @@ THE COMPLETE WORKFLOW
 ---------------------
 Prepare backups -> configure the editor -> create a project -> capture
 points -> set the map marker -> configure registration -> export ->
-import gameplay with VltEd -> import names with Binary -> patch the E675
-profile seed if needed -> create a new profile -> test in the game.
+import gameplay with VltEd -> import names with Binary -> patch the profile
+seed for your event if needed -> create a new profile -> test in the game.
 
 Saving a project, exporting scripts, and installing a race are DIFFERENT
 operations. The game does not load .nfsrace, .nfsms, or .end files directly.
 
-The editor supports Sprint, Circuit, and Checkpoint events. The bundled
-database patcher supports ONLY E675, regardless of the editor's Event ID.
-It is not a general patcher for every new race.
+E675 and sp_c_45 are EXAMPLE INPUTS throughout this guide, not required
+values. Replace them with your chosen Event ID and Track / vault name in
+fields, paths, filenames, localization keys, and patch commands. Check
+that your chosen names are unused before installing a new race.
+
+The editor supports Sprint, Circuit, and Checkpoint events. The separate
+database patcher registers the Event ID you specify with PATCH <EventID>.
+It does not automatically read the event from your Race Creator project,
+and the track name is not an input to the database patcher.
 
 STEP 1 - PREPARE THE TOOLS AND BACKUPS
 -------------------------------------
@@ -36,7 +42,7 @@ STEP 1 - PREPARE THE TOOLS AND BACKUPS
      run.bat                         Main editor launcher
      nfs-race-creator.py              Main editor
      Patch Quick Race Database.bat   Separate patcher launcher
-     Patch Quick Race Database.py    E675 seed patcher
+     Patch Quick Race Database.py    Selected-event seed patcher
      assets\                         Map, icons, template
      projects\                       Editable race projects
      exports\                        Generated installation scripts
@@ -384,18 +390,20 @@ It does not validate registration arrays, language keys, the profile
 unlock database, or in-game marker rendering. Compressed data can also
 prevent raw coordinate patterns from being found.
 
-STEP 15 - APPLY THE SEPARATE E675 DATABASE PATCHER
--------------------------------------------------
-Use this step only for E675. Changing Event ID in Race Creator does NOT
-change the patcher's target. Other new event IDs require their own profile
-seed registration; this bundled patcher cannot provide that.
+STEP 15 - APPLY THE DATABASE PATCHER FOR YOUR EVENT
+--------------------------------------------------
+The patch command is PATCH <EventID>. Here <EventID> means the Event ID
+from your Race Creator project; do not type brackets or parentheses.
+E675 is only an example, and sp_c_45 is only an example track name.
+The database patcher needs the Event ID, NOT the Track / vault name.
 
 Why it is needed: Quick Race uses entries in the profile's UserUnlocks
-SQLite database. Adding E675 to a gameplay unlock list cannot create a
-missing database row. The patcher adds that row to GLOBAL\NFSGD.BIN,
+SQLite database. Adding an event to a gameplay unlock list cannot create
+a missing database row. The patcher adds that row to GLOBAL\NFSGD.BIN,
 which supplies the database for NEW profiles.
 
-1. Finish the VltEd/Binary installation steps first.
+1. Finish the VltEd/Binary installation steps first. Ensure your chosen
+   event is registered in the intended gameplay unlock list.
 2. Close the game and all game-data/database editors.
 3. For the default game location, double-click:
 
@@ -405,48 +413,82 @@ which supplies the database for NEW profiles.
      D:\Games\Need for Speed Undercover\GLOBAL\NFSGD.BIN
 
    The patcher does not read Race Creator's Setup/settings.json paths.
-4. Read the preview and verify that the displayed seed belongs to the
-   intended installation. The missing row is added with:
-     Type=0, Key=3304766100 (0xC4FABA94), State=0 (locked).
-5. Type PATCH in uppercase and press Enter to apply.
-   Enter without PATCH, or another word, cancels without seed changes.
-6. Wait for "Patch verified" and keep the printed backup path.
+4. Verify that the displayed seed path belongs to the intended game.
+5. Type the command for YOUR event and press Enter. For example:
+
+     PATCH E675
+
+   For a different Event ID, such as E676, type PATCH E676 instead.
+   PATCH and the E in the ID must be uppercase; the ID needs at least
+   three digits. PATCH alone, a track name, or PATCH (E675) is invalid.
+   Press Enter with an empty command to cancel without seed changes.
+   Invalid commands are rejected without creating a backup or applying.
+6. The patcher computes the short Event ID's hash, verifies the database,
+   displays the row to add, creates a backup, and applies that event's
+   patch. With this direct-command workflow, PATCH <EventID> authorizes
+   application; there is no second confirmation prompt.
+7. Wait for "Patch verified for <EventID>" and keep the printed backup path.
    The BAT window pauses so you can read the result.
 
-For a different game location, open Command Prompt in the application
-folder and replace the example paths with your actual installation:
+Each new row is Type=0, State=0 (locked). The Key depends on your Event ID.
+For the E675 EXAMPLE ONLY, it is 3304766100 (0xC4FABA94).
+A valid command registers a database key; it does not prove the race is
+installed in gameplay or add it to any gameplay unlock lists.
+
+To see an EVENT-SPECIFIC preview before confirming, open Command Prompt
+in the application folder and run (replace E675 with your own ID):
+
+  py -3 -B "Patch Quick Race Database.py" --event-id E675
+
+This prints the selected event's row preview first, then requires the
+matching PATCH E675 command. A command naming a different event is rejected.
+
+For a different game location, replace the example paths below:
 
   py -3 -B "Patch Quick Race Database.py" --seed "E:\Games\Need for Speed Undercover\GLOBAL\NFSGD.BIN" --exe "E:\Games\Need for Speed Undercover\nfs.exe"
 
-To preview without writing ANY patcher files, add --dry-run to that command.
-For the default installation, the preview command is:
+This still asks for PATCH <EventID>. Add --event-id YOUR_ID if you want
+that event's preview before confirmation.
 
-  py -3 -B "Patch Quick Race Database.py" --dry-run
+To preview without writing ANY patcher files, provide --event-id AND
+--dry-run. For the example ID at the default game location:
 
-Other patcher options:
-  --exe PATH   If omitted, nfs.exe is expected one folder above GLOBAL.
-  --apply      Performs validation/backup/application without asking PATCH.
-  --help       Shows command-line help.
+  py -3 -B "Patch Quick Race Database.py" --event-id E675 --dry-run
 
-Prefer interactive mode. --apply and --dry-run cannot be combined.
+Combine those options with --seed and --exe for another installation.
+--dry-run does not ask for a PATCH command or create a backup.
+
+Patcher options:
+  --event-id ID  Select the event to preview; no default ID is assumed.
+  --seed PATH    Select the encrypted GLOBAL\NFSGD.BIN seed.
+  --exe PATH     If omitted, nfs.exe is expected one folder above GLOBAL.
+  --dry-run      Verify/preview only; requires --event-id.
+  --apply        Back up/apply without confirmation; requires --event-id.
+  --help         Show command-line help.
+
+Prefer the interactive workflow. --apply and --dry-run cannot be combined.
 Do not pass a profile save as --seed; only NFSGD.BIN is supported.
 
 The patcher verifies the database/encryption and automatically creates:
-  GLOBAL\NFSGD.BIN.before-E675.<timestamp>.bak
-It does not overwrite existing backups. It does not modify nfs.exe,
-install race nodes, or read/change any existing profile save.
+  GLOBAL\NFSGD.BIN.before-<EventID>.<timestamp>.bak
+The backup name contains YOUR Event ID. Very long IDs use their first
+32 characters plus the event hash in the filename. Existing backups are
+not overwritten, and incomplete new backups are removed if creation fails.
+The patcher does not modify nfs.exe, install race/track nodes, or read/change
+any existing profile save.
 
-If E675 is already registered as a Quick Race entry in the seed, the
-patcher does nothing and preserves the current state. That message says
-nothing about whether an old profile already contains the row.
+If that unlock key already exists as a Quick Race entry in the seed, the
+patcher does nothing and preserves its state, including unlocked states.
+That message does not say whether an old profile contains the row.
 
 STEP 16 - CREATE A NEW PROFILE AND TEST
 ---------------------------------------
-1. After the E675 seed patch, launch the game and create a NEW profile.
-   Do not delete your old profiles; keep them for their existing progress.
-2. Complete career event E002 in the new profile to execute the normal
-   Quick Race unlock path containing E675.
-3. Open Quick Race and look for the event marker and localized title.
+1. After patching the seed for your chosen Event ID, launch the game and
+   create a NEW profile. Keep your old profiles and their existing progress.
+2. If your event was appended to the normal Quick Race unlock list in
+   Step 10, complete career event E002 in the new profile. For a different
+   unlock path, satisfy that path's actual gameplay conditions instead.
+3. Open Quick Race and look for YOUR event's marker and localized title.
 4. Start the race and check the start direction, checkpoint sequence,
    gate widths/heights, finish, route choices, and any bonus/shortcut points.
 5. Check traffic, AI, timers, cash/XP, and circuit laps where applicable.
@@ -485,13 +527,16 @@ RESTORING BACKUPS
 3. Restore the intended GLOBAL/LANGUAGES backups to reverse the gameplay
    and language installation. Keep any other mods in mind when choosing
    a backup; a full old folder backup also removes later changes.
-4. To undo only the seed patch, copy the desired
-   NFSGD.BIN.before-E675.<timestamp>.bak into GLOBAL as NFSGD.BIN.
+4. To undo a seed patch, copy the desired
+   NFSGD.BIN.before-<EventID>.<timestamp>.bak into GLOBAL as NFSGD.BIN.
    Keep the original backup too. Show filename extensions in Explorer so
    the restored name does not accidentally remain NFSGD.BIN.bak.
+   Each backup is a complete seed snapshot: restoring an older backup also
+   removes any event rows added AFTER that snapshot, not just the named ID.
 
 Seed restoration affects the seed, not existing saves. Reinstalling or
-replacing NFSGD.BIN can remove its patch; use --dry-run to check it again.
+replacing NFSGD.BIN can remove added rows; check your event again with
+--event-id YOUR_ID --dry-run.
 
 TROUBLESHOOTING
 ---------------
@@ -514,9 +559,10 @@ HUD invisible or blocking clicks:
   HUD and Click-through under Setup, then click Apply HUD settings.
 
 No marker in Quick Race:
-  Check saved gameplay data, event/track registration, normal UnlockEvents,
-  TrackPosition, and the profile's database row. For E675, confirm the seed
-  was patched BEFORE creating the profile and E002 was completed there.
+  Check saved gameplay data, event/track registration, the intended unlock
+  list, TrackPosition, and the profile's database row for YOUR Event ID.
+  Confirm the seed was patched BEFORE creating the profile and the relevant
+  unlock condition was satisfied (E002 for the normal Quick Race list).
   Do not assume marker coordinates alone create a profile unlock entry.
 
 Missing/wrong race title:
@@ -529,7 +575,8 @@ Patcher reports unsupported executable, decryption, integrity, or capacity:
 
 Patcher interrupted with Ctrl+C during application:
   The seed may already be patched. Keep the printed backup and run
-  --dry-run to check its state rather than assuming cancellation.
+  --event-id YOUR_ID --dry-run to check that event rather than assuming
+  cancellation. Replace YOUR_ID with the ID used in your PATCH command.
 
 For editor troubleshooting, open Log or Help > Open log file.
 The persistent log is logs\race_creator.log. You can also run:
