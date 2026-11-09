@@ -212,7 +212,7 @@ the game window to be focused; hotkeys are the practical in-game method.
 
 Limits:
   Start: 1; Finish: 1; Reset: 1.
-  Regular + time bonus checkpoints: no more than 15 combined.
+  Regular and time bonus checkpoints: no more than 15 each.
   Shortcuts: no more than 30.
 
 Important: regular checkpoints and time bonus checkpoints are stored as
