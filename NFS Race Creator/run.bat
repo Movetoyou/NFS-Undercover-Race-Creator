@@ -8,12 +8,12 @@ echo %* | findstr /i /c:"--verbose" >nul && goto console
 
 where pyw >nul 2>nul
 if errorlevel 1 goto console
-pyw -3 "NFS Race Creator V2.py" %*
+pyw -3 "nfs-race-creator.py" %*
 if errorlevel 1 goto console
 goto end
 
 :console
-py -3 "NFS Race Creator V2.py" %*
+py -3 "nfs-race-creator.py" %*
 
 :end
 endlocal
