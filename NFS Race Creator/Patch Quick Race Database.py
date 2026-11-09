@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import os
 from pathlib import Path
+import re
 import sqlite3
 import struct
 import sys
@@ -15,12 +16,60 @@ if sys.version_info < (3, 11) or not all(
     raise SystemExit(1)
 
 DEFAULT_SEED = Path("D:/Games/Need for Speed Undercover/GLOBAL/NFSGD.BIN")
-EVENT_ID = "E675"
-EVENT_KEY = 0xC4FABA94
 MASK_ADDRESS = 0xD582C4
 HEADER_FUNCTION = 0x7E7430
 SQLITE_HEADER = b"SQLite format 3\x00"
 DATABASE_CAPACITY = 0x30000
+
+
+def validate_event_id(value: str) -> str:
+    if not re.fullmatch(r"E[0-9]{3,}", value):
+        raise ValueError("Event ID must be uppercase E followed by at least three digits, for example E675.")
+    return value
+
+
+def read_patch_command(expected_event_id: str | None = None) -> str | None:
+    target = expected_event_id or "<EventID> (for example PATCH E675)"
+    command = input(f"Type PATCH {target} to create a backup and apply, or press Enter to cancel: ").split()
+    if not command:
+        return None
+    if len(command) != 2 or command[0] != "PATCH":
+        raise ValueError("Invalid command. Use PATCH followed by an Event ID, for example PATCH E675.")
+    event_id = validate_event_id(command[1])
+    if expected_event_id is not None and event_id != expected_event_id:
+        raise ValueError(f"The command does not match the preview. Use PATCH {expected_event_id}.")
+    return event_id
+
+
+def event_key(event_id: str) -> int:
+    data = event_id.encode("ascii")
+    mask = 0xFFFFFFFF
+
+    def mix(a, b, c):
+        a = (a - b - c) & mask; a ^= c >> 13
+        b = (b - c - a) & mask; b ^= (a << 8) & mask
+        c = (c - a - b) & mask; c ^= b >> 13
+        a = (a - b - c) & mask; a ^= c >> 12
+        b = (b - c - a) & mask; b ^= (a << 16) & mask
+        c = (c - a - b) & mask; c ^= b >> 5
+        a = (a - b - c) & mask; a ^= c >> 3
+        b = (b - c - a) & mask; b ^= (a << 10) & mask
+        c = (c - a - b) & mask; c ^= b >> 15
+        return a & mask, b & mask, c & mask
+
+    a = b = 0x9E3779B9
+    c = 0xABCDEF00
+    offset = 0
+    while offset + 12 <= len(data):
+        x, y, z = struct.unpack_from("<III", data, offset)
+        a, b, c = mix((a + x) & mask, (b + y) & mask, (c + z) & mask)
+        offset += 12
+    tail = data[offset:]
+    a = (a + int.from_bytes(tail[:4], "little")) & mask
+    b = (b + int.from_bytes(tail[4:8], "little")) & mask
+    c = (c + len(data) + (int.from_bytes(tail[8:], "little") << 8)) & mask
+    return mix(a, b, c)[2]
+
 
 def read_header_mask(executable: Path) -> bytes:
     data = executable.read_bytes()
@@ -98,21 +147,22 @@ def open_database(data: bytes) -> sqlite3.Connection:
         raise
 
 
-def prepare_patch(original: bytes, mask: bytes) -> tuple[bytes | None, tuple | None, int]:
+def prepare_patch(original: bytes, mask: bytes, event_id: str) -> tuple[bytes | None, tuple | None, int]:
+    key = event_key(event_id)
     database = decode_database(original, mask)
     connection = open_database(database)
     try:
         before = connection.execute('SELECT Type, "Key", State FROM UserUnlocks ORDER BY "Key"').fetchall()
         existing = connection.execute(
-            'SELECT Type, "Key", State FROM UserUnlocks WHERE "Key" = ?', (EVENT_KEY,)
+            'SELECT Type, "Key", State FROM UserUnlocks WHERE "Key" = ?', (key,)
         ).fetchone()
         if existing is not None:
             if existing[0] not in (0, 2):
-                raise ValueError("E675's key already belongs to a non-Quick-Race entry; it was not changed.")
+                raise ValueError(f"{event_id}'s key already belongs to a non-Quick-Race entry; it was not changed.")
             return None, existing, len(before)
         with connection:
             connection.execute(
-                'INSERT INTO UserUnlocks (Type, "Key", State) VALUES (0, ?, 0)', (EVENT_KEY,)
+                'INSERT INTO UserUnlocks (Type, "Key", State) VALUES (0, ?, 0)', (key,)
             )
         patched_database = connection.serialize()
     finally:
@@ -125,29 +175,37 @@ def prepare_patch(original: bytes, mask: bytes) -> tuple[bytes | None, tuple | N
     verified = open_database(verified_data)
     try:
         after = verified.execute('SELECT Type, "Key", State FROM UserUnlocks ORDER BY "Key"').fetchall()
-        if after != sorted(before + [(0, EVENT_KEY, 0)], key=lambda row: row[1]):
+        if after != sorted(before + [(0, key, 0)], key=lambda row: row[1]):
             raise ValueError("Unlock-row preservation verification failed.")
     finally:
         verified.close()
     return patched, None, len(before)
 
 
-def apply_patch(seed: Path, original: bytes, patched: bytes) -> Path:
+def apply_patch(seed: Path, original: bytes, patched: bytes, event_id: str) -> Path:
     if seed.read_bytes() != original:
         raise ValueError("The seed changed since the preview. Run the patcher again.")
-    backup = seed.with_name(f"{seed.name}.before-{EVENT_ID}.{time.time_ns()}.bak")
-    with backup.open("xb") as stream:
-        stream.write(original)
-        stream.flush()
-        os.fsync(stream.fileno())
-    if backup.read_bytes() != original:
-        raise ValueError(f"Backup verification failed: {backup}")
+    label = event_id if len(event_id) <= 32 else f"{event_id[:32]}-{event_key(event_id):08X}"
+    backup = seed.with_name(f"{seed.name}.before-{label}.{time.time_ns()}.bak")
+    backup_created = False
+    try:
+        with backup.open("xb") as stream:
+            backup_created = True
+            stream.write(original)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if backup.read_bytes() != original:
+            raise ValueError(f"Backup verification failed: {backup}")
+    except BaseException:
+        if backup_created:
+            backup.unlink(missing_ok=True)
+        raise
     print(f"Backup: {backup}")
 
     staging = None
     try:
         with tempfile.NamedTemporaryFile(
-            prefix=f".{seed.name}.{EVENT_ID}.", suffix=".tmp", dir=seed.parent, delete=False
+            prefix=f".{seed.name}.{label}.", suffix=".tmp", dir=seed.parent, delete=False
         ) as stream:
             staging = Path(stream.name)
             stream.write(patched)
@@ -167,13 +225,16 @@ def apply_patch(seed: Path, original: bytes, patched: bytes) -> Path:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Register E675 in the NFS Undercover profile database seed.")
+    parser = argparse.ArgumentParser(description="Register a chosen event in the NFS Undercover profile database seed.")
     parser.add_argument("--seed", type=Path, default=DEFAULT_SEED, help="Path to GLOBAL/NFSGD.BIN")
     parser.add_argument("--exe", type=Path, help="Path to the verified nfs.exe; defaults to the seed's game folder")
+    parser.add_argument("--event-id", type=validate_event_id, help="Event to preview, for example E675; required for --dry-run or --apply")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--dry-run", action="store_true", help="Verify and preview without writing any files")
-    mode.add_argument("--apply", action="store_true", help="Apply the previewed patch without an interactive prompt")
+    mode.add_argument("--apply", action="store_true", help="Apply the selected event patch without an interactive prompt")
     args = parser.parse_args()
+    if (args.dry_run or args.apply) and args.event_id is None:
+        parser.error("--dry-run and --apply require --event-id, for example --event-id E675")
     application_started = False
     backup = None
 
@@ -182,27 +243,36 @@ def main() -> int:
         executable = args.exe or seed.parent.parent / "nfs.exe"
         mask = read_header_mask(executable)
         original = seed.read_bytes()
-        patched, existing, count = prepare_patch(original, mask)
         print(f"Seed: {seed}")
         print(f"Original SHA256: {hashlib.sha256(original).hexdigest()}")
+        print("Only the seed is patched. Existing profile saves are not read or changed.")
+        if not args.dry_run:
+            print("Close the game and database editors before applying.")
+        event_id = args.event_id
+        if event_id is None:
+            event_id = read_patch_command()
+            if event_id is None:
+                print("Cancelled. No files changed.")
+                return 0
+        key = event_key(event_id)
+        patched, existing, count = prepare_patch(original, mask, event_id)
         if existing is not None:
-            print(f"{EVENT_ID} is already registered: Type={existing[0]}, Key={existing[1]}, State={existing[2]}.")
+            print(f"Unlock key for {event_id} already exists: Type={existing[0]}, Key={existing[1]}, State={existing[2]}.")
             print("No files changed.")
             return 0
         print(f"Verified SQLite database: {count} -> {count + 1} UserUnlocks rows.")
-        print(f"Add {EVENT_ID}: Type=0, Key={EVENT_KEY} (0x{EVENT_KEY:08X}), State=0 (locked).")
-        print("Only the seed is patched. Existing profile saves are not read or changed.")
+        print(f"Add {event_id}: Type=0, Key={key} (0x{key:08X}), State=0 (locked).")
         if args.dry_run:
             print("Dry run passed. No files changed.")
             return 0
-        print("Close the game and database editors before applying.")
-        if not args.apply and input("Type PATCH to create a backup and apply, or press Enter to cancel: ").strip() != "PATCH":
+        if args.event_id is not None and not args.apply and read_patch_command(event_id) is None:
             print("Cancelled. No files changed.")
             return 0
         application_started = True
-        backup = apply_patch(seed, original, patched)
+        backup = apply_patch(seed, original, patched, event_id)
         print(f"Patched SHA256: {hashlib.sha256(patched).hexdigest()}")
-        print("Patch verified. Create a NEW profile and complete E002 to unlock E675 in Quick Race.")
+        print(f"Patch verified for {event_id}. Create a NEW profile and satisfy its gameplay unlock condition.")
+        print("For an event in the normal Quick Race unlock list, complete E002.")
         print("Existing profiles will not acquire the new row from this seed change.")
         return 0
     except (OSError, ValueError, struct.error, sqlite3.Error, EOFError) as error:
@@ -212,7 +282,7 @@ def main() -> int:
         if backup is not None:
             print(f"\nInterrupted after patching. Backup: {backup}")
         elif application_started:
-            print("\nInterrupted during application. The seed may already be patched; check with --dry-run.")
+            print(f"\nInterrupted during application. The seed may already be patched; check with --event-id {event_id} --dry-run.")
             print("Keep any backup shown above.")
         else:
             print("\nCancelled. No seed changes were made.")
