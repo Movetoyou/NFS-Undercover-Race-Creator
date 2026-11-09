@@ -1,0 +1,222 @@
+### -- EVENT -- ###
+add_node gameplay ___ race_bin_career/E___ [Creation of new Node for the new event; 1. Event Type: "circuit, p2p (Sprint), tollboothrace (Checkpoint)"; 2. "E___", ">= 660", "String"]
+change_vault gameplay race_bin_career/E___ race_bin_career [Carrer Race Bin Vault]
+add_field gameplay race_bin_career/E___ 0x1c8aa5fa [I don't know what is this, but add this anyway]
+add_field gameplay race_bin_career/E___ 0x2fa52304 [I don't know what is this, but add this anyway]
+add_field gameplay race_bin_career/E___ AIAccelMax [Maximum Acceleration level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AIAccelMin [Minimum Acceleration level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AIHandlingMax [Maximum Handling level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AIHandlingMin [Minimum Handling level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AISkillMax[Maximum Skill level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AISkillMin [Minimum Skill level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AISpeedMax [Maximum Skill level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ AISpeedMin [Minimum Speed level for the AI Racers; "0 - 100" "Integer"]
+add_field gameplay race_bin_career/E___ CashValue [Amount of Cash the Player gets after complete the event; ">= 0", "Integer"]
+add_field gameplay race_bin_career/E___ CashValueDominate [Amount of Cash Player gets after dominate the event; ">= 0", "Integer"]
+add_field gameplay race_bin_career/E___ CollectorsEditionRace [Does this event is from Collectors Edition; "Boolean"]
+add_field gameplay race_bin_career/E___ CopsInRace [Does cops will present in this event; "Boolean"]
+add_field gameplay race_bin_career/E___ DominationTime [Time for complete to get domination title in this event; ">= 0", "Float"]
+add_field gameplay race_bin_career/E___ EventID [Identification Data for this event; "E___", ">= 660", "String"]
+add_field gameplay race_bin_career/E___ FinishCamera [Add, but skip the update due to always contains "(Automatic)" as String]
+add_field gameplay race_bin_career/E___ gameplayvault [Gameplay Vault of this event; "E___", ">= 660", "String"]
+add_field gameplay race_bin_career/E___ IntroNIS [Race Intro cutscene of this event; "Race0#, except Race07", List of intros can be find in this directory in VltEd: "nis\_default\race_intros\", "String"]
+add_field gameplay race_bin_career/E___ Level [Level of the Player need to unlock this event; "0 - 18", "Integer"]
+add_field gameplay race_bin_career/E___ MasterEvent [Does this event is for master's of the game; "Boolean"]
+add_field gameplay race_bin_career/E___ Name [Name of this event; "race_bin_career/E___", ">= 660", "String"]
+add_field gameplay race_bin_career/E___ Region [Region of where is this event; "0 - 2", "Integer"]
+add_field gameplay race_bin_career/E___ RewardsForDominate [Reward for dominate this event; List of rewards can be find in this directory in VltEd: "gameplay\baseelement\item\reward_marker\", "StringArray"]
+add_field gameplay race_bin_career/E___ RewardsForWinner [Reward for complete this event; List of rewards can be find in this directory in VltEd: "gameplay\baseelement\item\reward_marker\", "StringArray"]
+add_field gameplay race_bin_career/E___ Template [Add, but skip the update due to always contains "False" as Boolean]
+add_field gameplay race_bin_career/E___ ThreatRangeMax [I don't know what is this, but add this anyway; "0 - 9", "Integer"]
+add_field gameplay race_bin_career/E___ ThreatRangeMin [I don't know what is this, but add this anyway; "0 - 9", "Integer"]
+add_field gameplay race_bin_career/E___ TimeLimit [Starting time limit (for checkpoint event only); ">= 0", "Float"]
+add_field gameplay race_bin_career/E___ TrackLayout [Track name that using this event; "tracks/___/___/___ -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay race_bin_career/E___ TrackPosition [Coordination of Event's marker in the map; "10 - 3062", "Vector2Float"]
+add_field gameplay race_bin_career/E___ TrackRecord [Track record of this event; ">= 0", "Float"]
+add_field gameplay race_bin_career/E___ TrafficLevel [Traffic Level for this event; "0 - 100", "Integer"]
+add_field gameplay race_bin_career/E___ XP [Amount of XP the player gets after complete the event; ">= 0", "Integer"]
+add_field gameplay race_bin_career/E___ XPDominate [Amount of XP the player gets after dominate the event; ">= 0", "Integer"]
+update_field gameplay race_bin_career/E___ 0x1c8aa5fa 6
+update_field gameplay race_bin_career/E___ AIAccelMax 0
+update_field gameplay race_bin_career/E___ AIAccelMin 0
+update_field gameplay race_bin_career/E___ AIHandlingMax 0
+update_field gameplay race_bin_career/E___ AIHandlingMin 0
+update_field gameplay race_bin_career/E___ AISkillMax 0
+update_field gameplay race_bin_career/E___ AISkillMin 0
+update_field gameplay race_bin_career/E___ AISpeedMax 0
+update_field gameplay race_bin_career/E___ AISpeedMin 0
+update_field gameplay race_bin_career/E___ CashValue 0
+update_field gameplay race_bin_career/E___ CashValueDominate 0
+update_field gameplay race_bin_career/E___ CollectorsEditionRace True
+update_field gameplay race_bin_career/E___ CopsInRace False
+update_field gameplay race_bin_career/E___ DominationTime 0
+update_field gameplay race_bin_career/E___ EventID E___
+update_field gameplay race_bin_career/E___ FinishCamera (Automatic)
+update_field gameplay race_bin_career/E___ gameplayvault E___
+update_field gameplay race_bin_career/E___ IntroNIS 0
+update_field gameplay race_bin_career/E___ Level 0
+update_field gameplay race_bin_career/E___ MasterEvent False
+update_field gameplay race_bin_career/E___ Name race_bin_career/E___
+update_field gameplay race_bin_career/E___ Region 0
+update_field gameplay race_bin_career/E___ RewardsForDominate[0] 0
+update_field gameplay race_bin_career/E___ RewardsForWinner[0] 0
+update_field gameplay race_bin_career/E___ ThreatRangeMax 0
+update_field gameplay race_bin_career/E___ ThreatRangeMin 0
+update_field gameplay race_bin_career/E___ TimeLimit 0
+update_field gameplay race_bin_career/E___ TrackPosition X 0
+update_field gameplay race_bin_career/E___ TrackPosition Y 0
+update_field gameplay race_bin_career/E___ TrackRecord 0
+update_field gameplay race_bin_career/E___ TrafficLevel 0
+update_field gameplay race_bin_career/E___ XP 0
+update_field gameplay race_bin_career/E___ XPDominate 0
+
+###  -- TRACK -- ###
+add_node gameplay track_layout tracks/___/___/___ [Creation of new Node for the new track layout; "tracks/___/___/___ -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ Barriers [Barriers for this track layout to coordinated the player, where to go; "ArrayInteger"]
+add_field gameplay tracks/___/___/___ Checkpoint [Amount of checkpoints in this track layout; "tracks/___/___/___/checkpoint[1 - 15] and/or tracks/___/___/___/time_bonus_checkpoint[1 - 15]", "StringArray"]
+add_field gameplay tracks/___/___/___ Children [Amount of triggers and markers in this track layout; "tracks/___/___/___/checkpoint[1 - 15] and/or tracks/___/___/___/time_bonus_checkpoint[1 - 15] and/or tracks/___/___/___/finishline1 and/or tracks/___/___/___/resetplayertrigger1 and/or tracks/___/___/___/startgrid1 and/or tracks/___/___/___/shortcut[1 - 30]", "StringArray"]
+add_field gameplay tracks/___/___/___ gameplayvault [Gameplay Vault of this track layout; "___________" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ Name [Name of this track layout; "tracks/___/___/___ -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ racefinish [Name of track layout's finish line; "tracks/___/___/___/finishline1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ racestart [Name of track layout's start grid; "tracks/___/___/___/startgrid1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ Shortcuts [Amount of shortcuts in this track layout; "tracks/___/___/___/shortcut[1 - 30] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___ Template [Add, but skip the update due to always contains "False" as Boolean]
+add_field gameplay tracks/___/___/___ TrackLength [Length from start to finish in this track layout; ">=0", "Integer"]
+update_field gameplay tracks/___/___/___ Barriers[0] 0
+update_field gameplay tracks/___/___/___ Checkpoint[0] 0
+update_field gameplay tracks/___/___/___ Children[0] 0
+update_field gameplay tracks/___/___/___ gameplayvault ___
+update_field gameplay tracks/___/___/___ Name tracks/___/___/___
+update_field gameplay tracks/___/___/___ racefinish tracks/___/___/___/finishline1
+update_field gameplay tracks/___/___/___ racestart tracks/___/___/___/startgrid1
+update_field gameplay tracks/___/___/___ Shortcuts[0] 0
+update_field gameplay tracks/___/___/___ TrackLength 0
+
+### -- START GRID -- ###
+add_node gameplay startgrid tracks/___/___/___/startgrid1 [Creation of new start grid node for the new track layout; "tracks/___/___/___/startgrid1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+change_vault gameplay tracks/___/___/___/startgrid1 ___ [Start Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/startgrid1 Name [Name of this start grid; "tracks/___/___/___/startgrid1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String" ]
+add_field gameplay tracks/___/___/___/startgrid1 Position [Coordination of this start grid; "Vector3", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/startgrid1 Rotation [Facing rotation of this start grid; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/startgrid1 Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/startgrid1 Name tracks/___/___/___/startgrid1
+update_field gameplay tracks/___/___/___/startgrid1 Position X 0
+update_field gameplay tracks/___/___/___/startgrid1 Position Y 0
+update_field gameplay tracks/___/___/___/startgrid1 Position Z 0
+update_field gameplay tracks/___/___/___/startgrid1 Rotation 0
+
+### -- FINISH LINE -- ###
+add_node gameplay startgrid tracks/___/___/___/finishline1 [Creation of new finish line node for the new track layout; "tracks/___/___/___/finishline1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+change_vault gameplay tracks/___/___/___/finishline1 ___ [Finish Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/finishline1 Name [Name of this finish line; "tracks/___/___/___/finishline1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String" ]
+add_field gameplay tracks/___/___/___/finishline1 Dimensions [Size of the box for detecting the player; "Default is "x = 1, y = 80, z = 40", "Vector3Integer"]
+add_field gameplay tracks/___/___/___/finishline1 FlareSpacing [Distance between flares; ">= 0", "Float"]
+add_field gameplay tracks/___/___/___/finishline1 Position [Coordination of this finish line; "Vector3", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/finishline1 Rotation [Facing rotation of this finish line; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/finishline1 Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/finishline1 Name tracks/___/___/___/finishline1
+update_field gameplay tracks/___/___/___/finishline1 Dimensions X 0
+update_field gameplay tracks/___/___/___/finishline1 Dimensions Y 0
+update_field gameplay tracks/___/___/___/finishline1 Dimensions Z 0
+update_field gameplay tracks/___/___/___/finishline1 FlareSpacing 0
+update_field gameplay tracks/___/___/___/finishline1 Position X 0
+update_field gameplay tracks/___/___/___/finishline1 Position Y 0
+update_field gameplay tracks/___/___/___/finishline1 Position Z 0
+update_field gameplay tracks/___/___/___/finishline1 Rotation 0
+
+### -- RESET PLAYER TRIGGER -- ###
+add_node gameplay startgrid tracks/___/___/___/resetplayertrigger1 [Creation of new reset player trigger node for the new track layout; "tracks/___/___/___/resetplayertrigger1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+change_vault gameplay tracks/___/___/___/resetplayertrigger1 ___ [Reset Player Trigger Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/resetplayertrigger1 Name [Name of this reset player trigger; "tracks/___/___/___/resetplayertrigger1 -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String" ]
+add_field gameplay tracks/___/___/___/resetplayertrigger1 Position [Coordination of this reset player trigger; "Vector3", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/resetplayertrigger1 Rotation [Facing rotation of this reset player trigger; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/resetplayertrigger1 Width [Width distance of the reset player trigger; ">=0", "Integer"]
+add_field gameplay tracks/___/___/___/resetplayertrigger1 Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Name tracks/___/___/___/resetplayertrigger1
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Position X 0
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Position Y 0
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Position Z 0
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Rotation 0
+update_field gameplay tracks/___/___/___/resetplayertrigger1 Width 0
+
+### -- CHECKPOINT [1 - 15] -- ###
+add_node gameplay checkpoint tracks/___/___/___/checkpoint[1 - 15] [Creation of new checkpoint node for the new track layout; "tracks/___/___/___/checkpoint[1 - 15] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+change_vault gameplay tracks/___/___/___/checkpoint[1 - 15] ___ [Checkpoint Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/checkpoint[1 - 15] Name [Name of this checkpoint; "tracks/___/___/___/checkpoint[1 - 15] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/checkpoint[1 - 15] Dimensions [Size of the box for detecting the player; "Default is "x = 1, y = 80, z = 40", "Vector3Integer"]
+add_field gameplay tracks/___/___/___/checkpoint[1 - 15] Position [Coordination of this checkpoint; "Vector3Float", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/checkpoint[1 - 15] Rotation [Facing rotation of this checkpoint; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/checkpoint[1 - 15] Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Name tracks/___/___/___/checkpoint[1 - 15]
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Dimensions X 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Dimensions Y 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Dimensions Z 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Position X 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Position Y 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Position Z 0
+update_field gameplay tracks/___/___/___/checkpoint[1 - 15] Rotation 0
+
+### -- TIME BONUS CHECKPOINT [1 - 15] -- ###
+add_node gameplay checkpoint tracks/___/___/___/time_bonus_checkpoint[1 - 15] [Creation of new time bonus checkpoint node for the new track layout; "tracks/___/___/___/time_bonus_checkpoint[1 - 15] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "Checkpoint event only", "String"]
+change_vault gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] ___ [Time Bonus Checkpoint Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Name [Name of this time bonus checkpoint; "tracks/___/___/___/time_bonus_checkpoint[1 - 15] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Dimensions [Size of the box for detecting the player; "Default is "x = 1, y = 80, z = 40", "Vector3Integer"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] FlareSpacing [Distance between flares; ">= 0", "Float"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Position [Coordination of this checkpoint; "Vector3Float", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Rotation [Facing rotation of this checkpoint; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] TimeBonus [Extra time to add the time limit; ">=0", "Float"]
+add_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Name tracks/___/___/___/time_bonus_checkpoint[1 - 15]
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Dimensions X 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Dimensions Y 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Dimensions Z 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] FlareSpacing 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Position X 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Position Y 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Position Z 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] Rotation 0
+update_field gameplay tracks/___/___/___/time_bonus_checkpoint[1 - 15] TimeBonus 0
+
+### -- SHORTCUT [1 - 30] -- ###
+add_node gameplay shortcut tracks/___/___/___/shortcut[1 - 30] [Creation of new shortcut node for the new track layout; "tracks/___/___/___/shortcut[1 - 30] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "Checkpoint event only", "String"]
+change_vault gameplay tracks/___/___/___/shortcut[1 - 30] ___ [Shortcut Node Vault; "___" -> Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/shortcut[1 - 30] Name [Name of this shortcut; "tracks/___/___/___/shortcut[1 - 30] -> 1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint]; 3. Shorted track number [cr_a_40, sp_b_40, cp_c_40]", "String"]
+add_field gameplay tracks/___/___/___/shortcut[1 - 30] Position [Coordination of this checkpoint; "Vector3Float", "X, Y, Z, -> Z, -X, Y"]
+add_field gameplay tracks/___/___/___/shortcut[1 - 30] Rotation [Facing rotation of this checkpoint; "-180 - 180", "Float", "bit16 -> Float"]
+add_field gameplay tracks/___/___/___/shortcut[1 - 30] Template [Add, but skip the update due to always contains "False" as Boolean]
+update_field gameplay tracks/___/___/___/shortcut[1 - 30] Name tracks/___/___/___/shortcut[1 - 30]
+update_field gameplay tracks/___/___/___/shortcut[1 - 30] Position X 0
+update_field gameplay tracks/___/___/___/shortcut[1 - 30] Position Y 0
+update_field gameplay tracks/___/___/___/shortcut[1 - 30] Position Z 0
+update_field gameplay tracks/___/___/___/shortcut[1 - 30] Rotation 0
+
+### -- CHECKPOINT SETS -- ###
+resize_field gameplay tracks/___/___/___ Checkpoint [1 - 16]
+update_field gameplay tracks/___/___/___ Checkpoint[0] tracks/___/___/___/checkpoint[0 - 15]
+
+### -- CHILDREN SETS -- ###
+resize_field gameplay tracks/___/___/___ Children [2 - 63]
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/startgrid1
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/finishline1
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/checkpoint[0 - 15]
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/time_bonus_checkpoint[0 - 15]
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/resetplayertrigger1
+update_field gameplay tracks/___/___/___ Children[0] tracks/___/___/___/shortcut[0 - 30]
+
+### -- SHORTCUT SETS -- ###
+resize_field gameplay tracks/___/___/___ Shortcuts [1 - 31]
+update_field gameplay tracks/___/___/___ Shortcuts[0] tracks/___/___/___/shortcut[0 - 30]
+
+### -- BARRIERS -- ###
+resize_field gameplay tracks/___/___/___ Barriers [">=1"]
+update_field gameplay tracks/___/___/___ Barriers[0] 1
+
+### -- MISC -- ###
+resize_field gameplay race_bin_career Children [x + 1]
+update_field gameplay race_bin_career Children[x + 1] race_bin_career/E___
+resize_field gameplay tracks/___/___ Children [x + 1] (1. Region name [region_a, region_b, region_c]; 2. Track type [circuit, sprint, checkpoint])
+update_field gameplay tracks/___/___ Children[x + 1] tracks/___/___/___
+resize_field gameplay mw2_career/unlock/collectors_edition/unlock_quickrace UnlockEvents [x + 1]
+update_field gameplay mw2_career/unlock/collectors_edition/unlock_quickrace UnlockEvents[x + 1] race_bin_career/E___
+resize_field gameplay mw2_career/unlock/quick_race/unlock_quickrace UnlockEvents [x + 1]
+update_field gameplay mw2_career/unlock/quick_race/unlock_quickrace UnlockEvents[x + 1] race_bin_career/E___

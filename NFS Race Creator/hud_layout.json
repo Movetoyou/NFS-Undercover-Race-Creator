@@ -1,0 +1,75 @@
+{
+	"width": 550,
+	"x": 20,
+	"y": 20,
+	"use_saved_position": false,
+	"alpha": 0.75,
+	"background": "#0c0f14",
+	"border": "#39424f",
+	"border_width": 2,
+	"rows": [
+		{
+			"id": "title",
+			"visible": true,
+			"text": "NFS UNDERCOVER | RACE CREATOR",
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 5,
+			"fill": "x"
+		},
+		{
+			"id": "status",
+			"visible": true,
+			"prefix": "Game: ",
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 0,
+			"fill": "x"
+		},
+		{
+			"id": "race",
+			"visible": true,
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 0,
+			"fill": "x"
+		},
+		{
+			"id": "counts",
+			"visible": true,
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 0,
+			"fill": "x"
+		},
+		{
+			"id": "action",
+			"visible": true,
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 0,
+			"fill": "x"
+		},
+		{
+			"id": "hint",
+			"visible": true,
+			"text": "Ctrl + Alt:\nS - Start; F - Finish; C - Checkpoint; B - Time Bonus Checkpoint\nH - Shortcut; Z - Undo; O - Hide HUD; E - Open Editor\n\nCtrl + Alt + Shift:\nR - Reset Player Trigger; M - Event Marker",
+			"bold": true,
+			"anchor": "n",
+			"justify": "center",
+			"padx": 10,
+			"pady": 0,
+			"fill": "x"
+		}
+	]
+}

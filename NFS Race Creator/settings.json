@@ -1,0 +1,29 @@
+{
+  "game_root": "D:\\Games\\Need for Speed Undercover",
+  "hot_slot": 5,
+  "hotkeys": {
+    "capture_start": "Ctrl+Alt+S",
+    "capture_finish": "Ctrl+Alt+F",
+    "add_checkpoint": "Ctrl+Alt+C",
+    "add_bonus": "Ctrl+Alt+V",
+    "add_shortcut": "Ctrl+Alt+H",
+    "add_reset": "Ctrl+Alt+Shift+R",
+    "set_map_marker": "Ctrl+Alt+Shift+M",
+    "undo": "Ctrl+Alt+Z",
+    "toggle_hud": "Ctrl+Alt+O",
+    "open_editor": "Ctrl+Alt+E",
+    "export": ""
+  },
+  "hud_visible": false,
+  "hud_click_through": true,
+  "hud_alpha": 0.86,
+  "hud_alpha_custom": false,
+  "hud_borderless": true,
+  "hud_x": 20,
+  "hud_y": 20,
+  "export_dir": "D:\\Games\\Need for Speed Undercover\\NFS Race Creator\\exports",
+  "export_base_auto": true,
+  "export_base": "E675_sp_c_45",
+  "last_project": "D:\\NFS\\NFS Race Creator V2\\projects\\E675_sp_c_45.nfsrace",
+  "map_flip_y": false
+}
