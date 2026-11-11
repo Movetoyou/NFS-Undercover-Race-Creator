@@ -886,6 +886,7 @@ HUD_LAYOUT_PATH = APP_DIR / "hud_layout.json"
 PROJECTS_DIR = APP_DIR / "projects"
 EXPORTS_DIR = APP_DIR / "exports"
 ROUTE_MAP_PATH = ASSETS_DIR / "Map.png"
+BARRIER_ASSETS_DIR = ASSETS_DIR / "barriers"
 LOG_DIR = APP_DIR / "logs"
 LOG_PATH = LOG_DIR / "race_creator.log"
 
@@ -1452,7 +1453,7 @@ DEFAULT_DATA = {
     "ai_speed_min": 0,
     "ai_speed_max": 0,
     "track_position": [0.0, 0.0],
-    "barriers": [1],
+    "barriers": [],
     "rewards_winner": ["0"],
     "rewards_dominate": ["0"],
     "end_english_file": "LANGUAGES\\English_Global.bin",
@@ -1805,8 +1806,6 @@ class RaceProject:
             messages.append("ERROR: More than 15 checkpoints (including time bonus).")
         if len(self.shortcuts) > MAX_SHORTCUTS:
             messages.append("ERROR: More than 30 shortcuts.")
-        if not self.data.get("barriers"):
-            messages.append("ERROR: At least one barrier is required by the template.")
         xy = self._track_position_xy()
         tx, ty = xy if xy is not None else (0.0, 0.0)
         if not (10 <= tx <= MAX_MAP - 10 and 10 <= ty <= MAX_MAP - 10):
@@ -2325,6 +2324,19 @@ class MapView(ttk.Frame):
         self._pending_route = None
 
         self._fit_scale = 0.25
+        self.barrier_mode = tk.BooleanVar(value=False)
+        self.barrier_layer = tk.StringVar(value="")
+        self.barrier_summary = tk.StringVar(value="")
+        self.barrier_hint = tk.StringVar(value="Zoom in and click a numbered label to toggle its ID.")
+        self._barriers: list[dict] = []
+        self._barrier_layers: dict[str, str] = {}
+        self._barrier_ids: set[int] = set()
+        self._barrier_size = (8192, 8192)
+        self._barrier_reference: Image.Image | None = None
+        self._barrier_display: Image.Image | None = None
+        self._barrier_hits: list[tuple[tuple[float, float, float, float], int]] = []
+        self._barrier_menu: tk.Menu | None = None
+        self._load_barriers()
 
         self._load_image()
         self._build_overlay()
@@ -2340,6 +2352,7 @@ class MapView(ttk.Frame):
         self.canvas.bind("<Motion>", self._on_motion)
         self.flip_y.trace_add("write", lambda *_: self._on_flip())
         self.show_grid.trace_add("write", lambda *_: self._on_grid_toggle())
+        self.barrier_mode.trace_add("write", lambda *_: self._on_barrier_mode())
 
     # ------------------------------------------------------------------ images
     def _load_image(self):
@@ -2354,24 +2367,137 @@ class MapView(ttk.Frame):
             log.error("could not load %s: %s", path, exc)
         self._rebuild_display()
 
-    def _rebuild_display(self):
-        if self.image is None:
-            self.display_image = None
-            return
-        display = (
-            self.image.transpose(Image.FLIP_TOP_BOTTOM)
-            if self.flip_y.get()
-            else self.image
-        )
+    def _transform_image(self, image: Image.Image) -> Image.Image:
         for _ in range(self.rotation):
-            display = display.transpose(Image.ROTATE_90)
-        self.display_image = display
+            image = image.transpose(Image.ROTATE_90)
+        if self.flip_y.get():
+            image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+
+    def _rebuild_display(self):
+        self.display_image = self._transform_image(self.image) if self.image is not None else None
+        self._barrier_display = (
+            self._transform_image(self._barrier_reference)
+            if self._barrier_reference is not None else None
+        )
 
     def rotate(self, direction: int):
         """Rotate the view 90 deg; -1 clockwise, +1 counter-clockwise."""
         self.rotation = (self.rotation + int(direction)) % 4
         self._rebuild_display()
         self.fit_view()
+
+    def _load_barriers(self):
+        try:
+            catalog = json.loads((BARRIER_ASSETS_DIR / "catalog.json").read_text(encoding="utf-8"))
+            self._barrier_size = tuple(catalog["image_size"])
+            self._barriers = catalog["barriers"]
+            self._barrier_layers = catalog["layers"]
+            self._barrier_ids = {entry["id"] for entry in self._barriers}
+            self.barrier_layer.set(next(iter(self._barrier_layers)))
+        except (OSError, ValueError, KeyError, StopIteration) as exc:
+            self._barriers = []
+            self._barrier_layers = {}
+            log.warning("barrier catalog unavailable: %s", exc)
+        self.refresh_barriers()
+
+    def _on_barrier_mode(self):
+        if self.barrier_mode.get() and not self._barriers:
+            self.barrier_mode.set(False)
+            self.app._set_status("Barrier catalog unavailable; check the assets/barriers folder.")
+            return
+        self.app._sync_all()
+        self.change_barrier_layer()
+        self.canvas.itemconfigure(
+            self._overlay_hint,
+            text=("LMB toggle barrier ID" if self.barrier_mode.get() else "LMB set TrackPosition")
+            + "  |  RMB drag pan  |  wheel zoom 1-16x",
+        )
+
+    def change_barrier_layer(self, _event=None):
+        self._barrier_reference = None
+        self._barrier_display = None
+        if self.barrier_mode.get():
+            try:
+                path = BARRIER_ASSETS_DIR / self._barrier_layers[self.barrier_layer.get()]
+                with Image.open(path) as image:
+                    self._barrier_reference = image.convert("RGBA")
+                self._barrier_display = self._transform_image(self._barrier_reference)
+            except (OSError, KeyError) as exc:
+                log.warning("barrier reference unavailable: %s", exc)
+                self.barrier_hint.set("Reference arrows unavailable; numbered ID markers are still editable.")
+        self.refresh_barriers()
+
+    def refresh_barriers(self):
+        selected = set(self.app.project.data.get("barriers", []))
+        unmapped = selected - self._barrier_ids
+        self.barrier_summary.set(
+            f"{len(selected)} enabled; {len(self._barrier_ids)} mapped IDs"
+            + (f"\n{len(unmapped)} unshown IDs kept in Advanced." if unmapped else "")
+        )
+        if hasattr(self, "_overlay_hint"):
+            self._schedule_render()
+
+    def _draw_barriers(self):
+        self._barrier_hits = []
+        if not self.barrier_mode.get():
+            return
+        selected = set(self.app.project.data.get("barriers", []))
+        width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
+        bw, bh = self._barrier_size
+        for entry in self._barriers:
+            if entry["layer"] != self.barrier_layer.get():
+                continue
+            x0, y0, x1, y1 = entry["bounds"]
+            sx, sy = self.uv_to_screen((x0 + x1) / (2 * bw), (y0 + y1) / (2 * bh))
+            if not (-40 <= sx <= width + 40 and -16 <= sy <= height + 16):
+                continue
+            barrier_id = entry["id"]
+            color = "#8dea75" if barrier_id in selected else "#eef2f6"
+            item = self.canvas.create_text(
+                sx, sy, text=str(barrier_id), fill=color,
+                font=(UI_FONT_FAMILY, -max(11, min(24, int(26 * self.W * self.scale / bw)))),
+                tags="barriers",
+            )
+            box = self.canvas.bbox(item)
+            left, top, right, bottom = box
+            bounds = (left - 3, top - 2, right + 3, bottom + 2)
+            background = self.canvas.create_rectangle(
+                *bounds, fill="#183322" if barrier_id in selected else "#111a24",
+                outline=color if barrier_id in selected else "#596676",
+                width=2 if barrier_id in selected else 1, tags="barriers",
+            )
+            self.canvas.tag_lower(background, item)
+            self._barrier_hits.append((bounds, barrier_id))
+
+    def _barriers_at(self, sx: float, sy: float) -> list[int]:
+        return sorted({
+            barrier_id for (x0, y0, x1, y1), barrier_id in self._barrier_hits
+            if x0 <= sx <= x1 and y0 <= sy <= y1
+        })
+
+    def _toggle_barrier_at(self, sx: float, sy: float):
+        candidates = self._barriers_at(sx, sy)
+        if len(candidates) == 1:
+            self.app.toggle_barrier(candidates[0])
+        elif candidates:
+            if self._barrier_menu is not None:
+                self._barrier_menu.destroy()
+            self._barrier_menu = tk.Menu(self.canvas, tearoff=False)
+            selected = set(self.app.project.data.get("barriers", []))
+            for barrier_id in candidates:
+                self._barrier_menu.add_command(
+                    label=f"{barrier_id} ({'enabled' if barrier_id in selected else 'disabled'})",
+                    command=lambda value=barrier_id: self.app.toggle_barrier(value),
+                )
+            try:
+                self._barrier_menu.tk_popup(
+                    self.canvas.winfo_rootx() + int(sx), self.canvas.winfo_rooty() + int(sy)
+                )
+            finally:
+                self._barrier_menu.grab_release()
+        else:
+            self.app._set_status("Click a numbered barrier label; zoom in or select another layer.")
 
     # --------------------------------------------------------- display toggles
     def _on_flip(self):
@@ -2501,6 +2627,8 @@ class MapView(ttk.Frame):
         self.canvas.delete("route")
         self.canvas.delete("grid")
         self.canvas.delete("markers")
+        self.canvas.delete("barriers")
+        self._barrier_hits = []
         if self.display_image is None:
             self.canvas.create_text(
                 20,
@@ -2534,6 +2662,14 @@ class MapView(ttk.Frame):
         target_h = max(1, int(round((iy1 - iy0) * self.scale)))
         resample = Image.LANCZOS if self.scale < 0.6 else Image.BILINEAR
         resized = crop.resize((target_w, target_h), resample)
+        if self.barrier_mode.get() and self._barrier_display is not None:
+            rw, rh = self._barrier_display.size
+            reference = self._barrier_display.transform(
+                (target_w, target_h), Image.Transform.EXTENT,
+                (ix0 * rw / self.W, iy0 * rh / self.H, ix1 * rw / self.W, iy1 * rh / self.H),
+                resample=Image.Resampling.BILINEAR,
+            )
+            resized.paste(reference, (0, 0), reference)
         self.photo = ImageTk.PhotoImage(resized)
         self.canvas.create_image(
             self.ox + ix0 * self.scale,
@@ -2544,6 +2680,7 @@ class MapView(ttk.Frame):
         )
         self._draw_grid()
         self._draw_route()
+        self._draw_barriers()
         self.draw_markers()
         # Overlay readouts are created once at startup; keep them on top.
         for item in (
@@ -2731,7 +2868,10 @@ class MapView(ttk.Frame):
         self._drag_start = None
         self._drag_button = None
         if not dragged and button == 1:
-            self._place_at(event.x, event.y)
+            if self.barrier_mode.get():
+                self._toggle_barrier_at(event.x, event.y)
+            else:
+                self._place_at(event.x, event.y)
 
     def _place_at(self, sx, sy):
         x, y = self.screen_to_trackposition(sx, sy)
@@ -2751,6 +2891,13 @@ class MapView(ttk.Frame):
             self._overlay_tp,
             text=f"TrackPosition: X={tx:.0f}  Y={ty:.0f}",
         )
+        if self.barrier_mode.get():
+            candidates = self._barriers_at(event.x, event.y)
+            selected = set(self.app.project.data.get("barriers", []))
+            self.barrier_hint.set(
+                ", ".join(f"{value}: {'enabled' if value in selected else 'disabled'}" for value in candidates)
+                if candidates else "Zoom in and click a numbered label to toggle its ID."
+            )
 
     # ------------------------------------------------------------------ route
     def _route_inputs(self):
@@ -3018,7 +3165,7 @@ def _array_section(out: _Lines, project: RaceProject, track: str) -> None:
     else:
         out.add("### No shortcuts captured; Shortcuts array left untouched.")
     out.section("BARRIERS")
-    barriers = project.data.get("barriers") or [1]
+    barriers = project.data.get("barriers", [])
     out.command("resize_field", "gameplay", track, "Barriers", len(barriers))
     for index, barrier in enumerate(barriers): out.update("gameplay", track, f"Barriers[{index}]", num(int(barrier)))
 
@@ -3833,6 +3980,8 @@ class MainViewMixin:
         elif current == str(self.log_tab):
             self._refresh_log_view()
         elif current == str(self.map_tab):
+            self._sync_all()
+            self.map_view.refresh_barriers()
             self.map_view.refresh_markers()
 
     def _configure_style(self):
@@ -4136,8 +4285,11 @@ class TabsMixin:
         self.map_view = MapView(frame, self)
         self.map_view.grid(row=0, column=0, sticky="nsew", padx=(6, 0), pady=6)
 
-        side = ttk.Frame(frame, padding=(8, 6))
-        side.grid(row=0, column=1, sticky="ns")
+        side_scroll = ScrollFrame(frame)
+        side_scroll.grid(row=0, column=1, sticky="ns")
+        side_scroll.canvas.configure(width=280)
+        side = ttk.Frame(side_scroll.inner, padding=(8, 6))
+        side.pack(fill="x")
         ttk.Label(
             side, text="MAP", foreground=PANEL_TITLE_FG,
             font=(UI_FONT_FAMILY, UI_FONT_SIZE + 1, "bold")
@@ -4148,6 +4300,7 @@ class TabsMixin:
             "captured points and the TrackPosition marker\n"
             "in one clean view.",
             style="TMuted.TLabel",
+            wraplength=250,
             justify="left",
         ).pack(anchor="w", pady=(2, 6))
         ttk.Label(
@@ -4187,6 +4340,31 @@ class TabsMixin:
         )
 
         ttk.Separator(side).pack(fill="x", pady=6)
+        ttk.Checkbutton(
+            side, text="Barrier edit mode", variable=self.map_view.barrier_mode,
+            state="normal" if self.map_view._barriers else "disabled",
+        ).pack(anchor="w", pady=2)
+        layer = ttk.Combobox(
+            side, textvariable=self.map_view.barrier_layer,
+            values=list(self.map_view._barrier_layers), state="readonly", width=22,
+        )
+        layer.pack(fill="x", pady=2)
+        layer.bind("<<ComboboxSelected>>", self.map_view.change_barrier_layer)
+        ttk.Label(
+            side, textvariable=self.map_view.barrier_summary,
+            style="TMuted.TLabel", wraplength=250,
+        ).pack(anchor="w", pady=2)
+        ttk.Label(
+            side, textvariable=self.map_view.barrier_hint,
+            style="TMuted.TLabel", wraplength=250,
+        ).pack(anchor="w", pady=2)
+        ttk.Label(
+            side, text="Green labels are enabled. Each layer separates\n"
+            "overlapping reference arrows; all selections export.",
+            style="TMuted.TLabel", wraplength=250,
+        ).pack(anchor="w", pady=2)
+
+        ttk.Separator(side).pack(fill="x", pady=6)
         ttk.Label(
             side, text="TRACKPOSITION", foreground=PANEL_TITLE_FG
         ).pack(anchor="w")
@@ -4204,7 +4382,8 @@ class TabsMixin:
             side,
             text=(
                 "Marker X / Y fields are on the Race tab.\n\n"
-                "Left click sets TrackPosition (0..3072).\n"
+                "Left click sets TrackPosition (0..3072)\n"
+                "when Barrier edit mode is off.\n"
                 "Right-drag pans; the wheel zooms 1-16x.\n\n"
                 "RouteRoad: center line with a fading halo,\n"
                 "fixed width, shortest Start -> CP/TBCP ->\n"
@@ -4212,8 +4391,20 @@ class TabsMixin:
                 "White route segments change road level (Z)."
             ),
             style="TMuted.TLabel",
+            wraplength=250,
             justify="left",
         ).pack(anchor="w", pady=(6, 0))
+
+        def scroll_side(event):
+            side_scroll.canvas.yview_scroll(int(-event.delta / 120), "units")
+            return "break"
+
+        def bind_side_wheel(widget):
+            widget.bind("<MouseWheel>", scroll_side)
+            for child in widget.winfo_children():
+                bind_side_wheel(child)
+
+        bind_side_wheel(side_scroll.inner)
 
     # ------------------------------------------------------------- export tab
 
@@ -4748,6 +4939,19 @@ class PointsMixin:
             self._set_status("Point order changed.")
 
     # ---------------------------------------------------------------- capture
+
+    def toggle_barrier(self, barrier_id: int):
+        self._sync_all()
+        barriers = self.project.data["barriers"]
+        self._push_undo()
+        enabled = barrier_id not in barriers
+        self.project.data["barriers"] = (
+            barriers + [barrier_id] if enabled else [value for value in barriers if value != barrier_id]
+        )
+        self._populate_barriers()
+        self.mark_dirty()
+        self._refresh_validation_and_previews(light=False)
+        self._set_status(f"Barrier {barrier_id} {'enabled' if enabled else 'disabled'}.")
 
     def set_track_position(self, x: float, y: float):
         self.project.data["track_position"] = [float(x), float(y)]
@@ -5683,13 +5887,16 @@ class SyncMixin:
             self.project.event_type, self.project.region, self.project.event_id
         )
 
+    def _populate_barriers(self):
+        widget = self.adv_texts["barriers"]
+        widget.delete("1.0", "end")
+        widget.insert("1.0", ", ".join(str(int(v)) for v in self.project.data.get("barriers", [])))
+        self.map_view.refresh_barriers()
+
     def _populate_advanced(self):
         if not self.adv_texts:
             return
-        self.adv_texts["barriers"].delete("1.0", "end")
-        self.adv_texts["barriers"].insert(
-            "1.0", ", ".join(str(int(v)) for v in self.project.data.get("barriers", [1]))
-        )
+        self._populate_barriers()
         for key, data_key in (
             ("rewards_winner", "rewards_winner"),
             ("rewards_dominate", "rewards_dominate"),
@@ -5768,9 +5975,11 @@ class SyncMixin:
                 continue
             try:
                 barriers.append(int(float(token)))
-            except ValueError:
+            except (ValueError, OverflowError):
                 self.sync_errors.append(f"WARN: barrier '{token}' is not a number; ignored.")
-        self.project.data["barriers"] = barriers or [1]
+        if barriers != self.project.data.get("barriers"):
+            self.project.data["barriers"] = barriers
+            self.map_view.refresh_barriers()
 
         for key in ("rewards_winner", "rewards_dominate"):
             raw = self.adv_texts[key].get("1.0", "end")
@@ -6108,6 +6317,9 @@ class RaceCreatorApp(MainViewMixin, TabsMixin, SyncMixin, PointsMixin, CaptureMi
             "4. Open the Map tab. Left-click the map to set TrackPosition (0..3072),\n"
             "   or use 'Use start position' / 'Use car position'. The marker X/Y\n"
             "   fields are on the Race tab.\n"
+            "   Enable Barrier edit mode to click numbered barrier IDs instead.\n"
+            "   Choose a reference layer to separate arrows; green IDs are enabled.\n"
+            "   Selections sync with Advanced, support Undo and save with the project.\n"
             "5. The same view draws the captured points (S, F, CPn, TBCPn, SC, R) and\n"
             "   the road route from Start through CP/TBCP to Finish, with one lime\n"
             "   spur per shortcut point.\n"
